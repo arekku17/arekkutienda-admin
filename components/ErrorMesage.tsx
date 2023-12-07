@@ -1,11 +1,11 @@
-import { ProductType } from '@/types/response'
+import { ProductSchemaType, ProductType } from '@/types/response'
 import { FormikErrors, FormikTouched } from 'formik'
 import React from 'react'
 
 interface Props {
-    errors: FormikErrors<ProductType>,
-    touched: FormikTouched<ProductType>,
-    name: keyof ProductType
+    errors: FormikErrors<ProductSchemaType>,
+    touched: FormikTouched<ProductSchemaType>,
+    name: keyof ProductSchemaType
 }
 
 const ErrorMesage = ({ errors, touched, name }: Props) => {
