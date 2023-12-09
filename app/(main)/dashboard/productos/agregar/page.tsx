@@ -7,9 +7,12 @@ import { InputText } from 'primereact/inputtext'
 import React, { useRef, useState } from 'react'
 import { Formik, Form, Field } from 'formik';
 import * as Yup from "yup";
-import { ProductType } from '@/types/response';
+import { ProductSchemaType, ProductType } from '@/types/response';
 import ErrorMesage from '@/components/ErrorMesage';
 import { Dropdown } from 'primereact/dropdown';
+import { postProductos } from '@/services/producto/api';
+import { useRouter } from 'next/router';
+import { redirect } from 'next/navigation';
 
 
 const ProductoSchema = Yup.object().shape({
@@ -26,17 +29,19 @@ const ProductoSchema = Yup.object().shape({
         .typeError("Debe ser un número"),
     stock: Yup.boolean()
         .required('Campo Requerido'),
-    idItem: Yup.string()
-        .required('Id del item Requerido'),
-    tallas: Yup.array()
+    tallaChica: Yup.number()
         .required('Campo Requerido'),
-    tipo: Yup.string()
+    tallaMediana: Yup.number()
+        .required('Campo Requerido'),
+    tallaGrande: Yup.number()
+        .required('Campo Requerido'),
+    tipo: Yup.object()
         .required('Campo Requerido')
 
 });
 
 const AgregarProductos = () => {
-    const [imageUploaded, setImageUploaded] = useState(null);
+    const [imageUploaded, setImageUploaded] = useState("");
     const [loadingUpload, setLoadingUpload] = useState(false);
     const [url, setUrl] = useState("");
     const { data: session, status } = useSession()
@@ -50,20 +55,12 @@ const AgregarProductos = () => {
     ]
 
 
-    const handleAgregarProducto = () => [
-
-    ]
-
-    const invoiceUploadHandler = async (event: any) => {
+    const invoiceUploadHandler = async (event: any, setFieldValue: any) => {
         // convert file to base64 encoded 
         const file = event.files[0];
 
-        uploadInvoice(file)
-    };
-
-    const uploadInvoice = async (invoiceFile: any) => {
         let formData = new FormData();
-        formData.append('image', invoiceFile);
+        formData.append('image', file);
 
         setLoadingUpload(true)
         await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/imagen/upload`, formData, {
@@ -75,14 +72,24 @@ const AgregarProductos = () => {
             console.log(res.data)
             setUrl(res.data.url)
             setImageUploaded(res.data.url)
-
+            setFieldValue("img", res.data.url)
         });
         setLoadingUpload(false)
-
     };
 
-    const onSubmit = (values: ProductType) => {
-        console.log(values)
+   
+    const onSubmit = (values: ProductSchemaType) => {
+        postProductos("" + session?.user.token, {
+            title: values.title,
+            anime: values.anime,
+            img: values.img,
+            price: values.price,
+            stock: true,
+            tallas: [values.tallaChica, values.tallaMediana, values.tallaGrande],
+            tipo: values.tipo.name
+        })
+        
+        redirect("/dashboard/productos")
     }
 
 
@@ -95,11 +102,12 @@ const AgregarProductos = () => {
                     <Formik
                         initialValues={{
                             anime: '',
-                            idItem: '',
-                            img: '',
+                            img: imageUploaded,
                             price: 0,
                             stock: true,
-                            tallas: [],
+                            tallaChica: 0,
+                            tallaGrande: 0,
+                            tallaMediana: 0,
                             tipo: "",
                             title: ""
                         }}
@@ -110,30 +118,23 @@ const AgregarProductos = () => {
                             ({ errors, touched, values, handleChange, setFieldValue }) => (
                                 <Form>
                                     <div className="field">
-                                        <label htmlFor="name">Id</label>
-                                        <InputText id="name" type="text" value={values.idItem} onChange={handleChange} />
-                                        <ErrorMesage errors={errors} touched={touched} name='idItem' />
-                                    </div>
-                                    <div className="field">
-                                        <label htmlFor="name">Nombre</label>
-                                        <InputText id="name" type="text" value={values.title} onChange={handleChange} />
+                                        <label htmlFor="name">Nombre del producto</label>
+                                        <InputText id="title" type="text" value={values.title} onChange={handleChange} />
                                         <ErrorMesage errors={errors} touched={touched} name='title' />
                                     </div>
                                     <div className="field">
-                                        <label htmlFor="email">Costo</label>
-                                        <InputText id="costo" type="number" value={"" + values.price} onChange={handleChange} />
+                                        <label htmlFor="price">Costo</label>
+                                        <InputText id="price" type="number" value={"" + values.price} onChange={handleChange} />
                                         <ErrorMesage errors={errors} touched={touched} name='price' />
                                     </div>
                                     <div className="field">
-                                        <label htmlFor="name">Anime</label>
-                                        <InputText id="name" type="text" value={"" + values.anime} onChange={handleChange} />
+                                        <label htmlFor="anime">Anime</label>
+                                        <InputText id="anime" type="text" value={values.anime} onChange={handleChange} />
                                         <ErrorMesage errors={errors} touched={touched} name='anime' />
                                     </div>
                                     <div className="field">
                                         <label htmlFor="age1">Categoria</label>
-                                        <Dropdown value={values.tipo} onChange={(e) => {
-                                            setFieldValue('tipo', e.value);
-                                        }} options={tiposProductos} optionLabel="name" placeholder="Selecciona una categoria" className="w-full" />
+                                        <Dropdown value={values.tipo} onChange={handleChange} options={tiposProductos} id="tipo" optionLabel="name" placeholder="Selecciona una categoria" className="w-full" />
                                         <ErrorMesage errors={errors} touched={touched} name='tipo' />
                                     </div>
                                     <div className="field">
@@ -143,7 +144,7 @@ const AgregarProductos = () => {
                                             accept="image/*"
                                             mode="basic"
                                             customUpload={true}
-                                            uploadHandler={invoiceUploadHandler}
+                                            uploadHandler={(e) => invoiceUploadHandler(e, setFieldValue)}
                                             maxFileSize={5000000}
                                             auto
                                             chooseLabel={loadingUpload ? "Cargando" : "Cargar"}
@@ -151,27 +152,31 @@ const AgregarProductos = () => {
                                         // customUpload={true}
                                         // uploadHandler={subirArchivo}
                                         />
-                                        {imageUploaded &&
+                                        {imageUploaded !== "" &&
                                             <img src={imageUploaded} alt={imageUploaded} width="170" className="mt-0 mx-auto mb-5 block shadow-2" />
                                         }
+                                        <ErrorMesage errors={errors} touched={touched} name='img' />
                                     </div>
                                     <div className='grid'>
                                         <div className="field col-12 md:col-4">
                                             <label htmlFor="age1">Stock en Chica</label>
-                                            <InputText id="age1" type="text" />
+                                            <InputText id="tallaChica" type="number" value={"" + values.tallaChica} onChange={handleChange} />
+                                            <ErrorMesage errors={errors} touched={touched} name='tallaChica' />
                                         </div>
                                         <div className="field col-12 md:col-4">
                                             <label htmlFor="age1">Stock en Mediana</label>
-                                            <InputText id="age1" type="text" />
+                                            <InputText id="tallaMediana" type="number" value={"" + values.tallaMediana} onChange={handleChange} />
+                                            <ErrorMesage errors={errors} touched={touched} name='tallaMediana' />
                                         </div>
                                         <div className="field col-12 md:col-4">
                                             <label htmlFor="age1">Stock en Grande</label>
-                                            <InputText id="age1" type="text" />
+                                            <InputText id="tallaGrande" type="number" value={"" + values.tallaGrande} onChange={handleChange} />
+                                            <ErrorMesage errors={errors} touched={touched} name='tallaGrande' />
                                         </div>
                                     </div>
 
 
-                                    <Button type='submit' label="Agregar Producto" className="w-full p-3 text-xl mt-3" onClick={handleAgregarProducto}></Button>
+                                    <Button type='submit' label="Agregar Producto" className="w-full p-3 text-xl mt-3" ></Button>
                                 </Form>
                             )
                         }
