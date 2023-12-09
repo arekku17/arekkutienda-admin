@@ -11,8 +11,10 @@ import { ProductSchemaType, ProductType } from '@/types/response';
 import ErrorMesage from '@/components/ErrorMesage';
 import { Dropdown } from 'primereact/dropdown';
 import { postProductos } from '@/services/producto/api';
-import { useRouter } from 'next/router';
-import { redirect } from 'next/navigation';
+
+import { Toast } from 'primereact/toast';
+import { useRouter } from 'next/navigation'
+ 
 
 
 const ProductoSchema = Yup.object().shape({
@@ -44,7 +46,10 @@ const AgregarProductos = () => {
     const [imageUploaded, setImageUploaded] = useState("");
     const [loadingUpload, setLoadingUpload] = useState(false);
     const [url, setUrl] = useState("");
-    const { data: session, status } = useSession()
+    const { data: session, status } = useSession();
+    const toast = useRef(null);
+    const router = useRouter();
+    
 
     const tiposProductos = [
         { name: "playera", code: "playera" },
@@ -54,6 +59,13 @@ const AgregarProductos = () => {
         { name: "botones", code: "boton" }
     ]
 
+    const showSuccess = () => {
+        toast.current?.show({severity:'success', summary: 'Agregado exitoso', detail:'Se agregó exitosamente el producto', life: 3000});
+    }
+
+    const showError = () => {
+        toast.current?.show({severity:'error', summary: 'Error', detail:'Hubo un error al generar el producto', life: 3000});
+    }
 
     const invoiceUploadHandler = async (event: any, setFieldValue: any) => {
         // convert file to base64 encoded 
@@ -87,9 +99,13 @@ const AgregarProductos = () => {
             stock: true,
             tallas: [values.tallaChica, values.tallaMediana, values.tallaGrande],
             tipo: values.tipo.name
+        }).then(res => {
+            showSuccess();
+            router.push("/dashboard/productos")
+        }).catch(error => {
+            showError();
         })
         
-        redirect("/dashboard/productos")
     }
 
 
@@ -187,6 +203,8 @@ const AgregarProductos = () => {
 
 
             </div>
+
+            <Toast ref={toast} />
         </div>
     )
 }

@@ -17,3 +17,22 @@ export const postProductos = async (token: string, data: ReqPostProducto) => {
         }
     })
 }
+
+export const putProducto = async (token: string, data: ReqPostProducto, id: string) => {
+    return await axios.put(`${process.env.NEXT_PUBLIC_BACKEND_URL}/producto/${id}`, data, {
+        headers: {
+            "x-access-token": token
+        }
+    })
+}
+
+export const deleteProductos = async (token: string, productos: any) => {
+    return await axios.put(`${process.env.NEXT_PUBLIC_BACKEND_URL}/eliminar/productos`, productos, {
+        headers: {
+            "x-access-token": token
+        }
+    })
+}
+
+
+

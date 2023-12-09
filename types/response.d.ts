@@ -22,17 +22,3 @@ export type ProductSchemaType = {
     tallaGrande: number,
     tipo: string,
 };
-
-
-/* Context Types */
-export type ProductSchemaType2 = {
-    title: string;
-    anime: string,
-    img: string,
-    price: number,
-    stock: boolean,
-    tallaChica: number,
-    tallaMediana: number,
-    tallaGrande: number,
-    tipo: string,
-};
