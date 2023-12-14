@@ -56,7 +56,7 @@ const EditarProducto = ({ params }: { params: { idItem: string } }) => {
     const [loadingUpload, setLoadingUpload] = useState(false);
     const [url, setUrl] = useState("");
     const { data: session, status } = useSession();
-    const toast = useRef(null);
+    const toast = useRef<Toast>(null);
     const router = useRouter();
 
     const tiposProductos = [
@@ -68,7 +68,7 @@ const EditarProducto = ({ params }: { params: { idItem: string } }) => {
     ]
 
     const showSuccess = () => {
-        toast.current?.show({ severity: 'success', summary: 'Agregado exitoso', detail: 'Se editó exitosamente el producto', life: 3000 });
+        toast?.current?.show({ severity: 'success', summary: 'Agregado exitoso', detail: 'Se editó exitosamente el producto', life: 3000 });
     }
 
     const showError = () => {

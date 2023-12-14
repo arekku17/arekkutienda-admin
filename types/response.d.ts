@@ -10,6 +10,11 @@ export type ProductType = {
     tipo: string,
 };
 
+export type selectionType = {
+    name: string,
+    code: string
+}
+
 /* Context Types */
 export type ProductSchemaType = {
     title: string;
@@ -20,5 +25,5 @@ export type ProductSchemaType = {
     tallaChica: number,
     tallaMediana: number,
     tallaGrande: number,
-    tipo: string,
+    tipo: selectionType
 };

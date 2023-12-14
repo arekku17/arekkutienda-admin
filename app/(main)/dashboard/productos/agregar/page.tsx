@@ -47,7 +47,7 @@ const AgregarProductos = () => {
     const [loadingUpload, setLoadingUpload] = useState(false);
     const [url, setUrl] = useState("");
     const { data: session, status } = useSession();
-    const toast = useRef(null);
+    const toast = useRef<Toast>(null);
     const router = useRouter();
     
 
@@ -124,7 +124,7 @@ const AgregarProductos = () => {
                             tallaChica: 0,
                             tallaGrande: 0,
                             tallaMediana: 0,
-                            tipo: "",
+                            tipo: {code: "", name: ""},
                             title: ""
                         }}
                         validationSchema={ProductoSchema}
