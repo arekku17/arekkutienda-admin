@@ -15,6 +15,11 @@ export type selectionType = {
     code: string
 }
 
+export type tallasType = {
+    name: string,
+    count: number
+}
+
 /* Context Types */
 export type ProductSchemaType = {
     title: string;
@@ -22,8 +27,6 @@ export type ProductSchemaType = {
     img: string,
     price: number,
     stock: boolean,
-    tallaChica: number,
-    tallaMediana: number,
-    tallaGrande: number,
+    tallas: Array<tallasType>,
     tipo: selectionType
 };

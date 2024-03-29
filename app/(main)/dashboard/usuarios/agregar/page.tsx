@@ -59,11 +59,7 @@ const AgregarProductos = () => {
         { name: "llavero", code: "llavero" },
         { name: "sudadera", code: "sudadera" },
         { name: "poster", code: "poster" },
-        { name: "pin", code: "pin" },
-        { name: "peluche", code: "peluche" },
-        { name: "figura", code: "figura" },
-        { name: "variado", code: "variado" }
-
+        { name: "botones", code: "boton" }
     ]
 
     const showSuccess = () => {
@@ -103,6 +99,7 @@ const AgregarProductos = () => {
             anime: values.anime,
             img: values.img,
             price: values.price,
+            stock: true,
             tallas: values.tallas,
             tipo: values.tipo.name
         }).then(res => {
@@ -119,7 +116,7 @@ const AgregarProductos = () => {
         <div className="grid">
             <div className="col-12">
                 <div className="card p-fluid">
-                    <h5>Agregar Producto</h5>
+                    <h5>Agregar Usuario</h5>
 
                     <Formik
                         initialValues={{
