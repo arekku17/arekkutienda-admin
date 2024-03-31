@@ -64,7 +64,7 @@ const EditarProducto = ({ params }: { params: { idItem: string } }) => {
         { name: "llavero", code: "llavero" },
         { name: "sudadera", code: "sudadera" },
         { name: "poster", code: "poster" },
-        { name: "botones", code: "boton" }
+        { name: "boton", code: "boton" }
     ]
 
     const showSuccess = () => {
