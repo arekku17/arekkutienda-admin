@@ -35,7 +35,7 @@ const Crud = () => {
     const router = useRouter();
     const { data: session, status } = useSession();
 
-    const { data: users, error, isLoading } = useSWR(["user", session?.user.token], ([url, token]) => fetcher(url, token))
+    const { data: users, error, isLoading } = useSWR(["user", session?.user.token], ([url, token]) => fetcher(url, (token ? token : "")))
 
     const formatCurrency = (value: number) => {
         return value.toLocaleString('en-US', {

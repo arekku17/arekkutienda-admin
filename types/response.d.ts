@@ -6,7 +6,7 @@ export type ProductType = {
     price: number,
     stock: boolean,
     idItem: string,
-    tallas: Array,
+    tallas: Array<tallasType>,
     tipo: string,
 };
 
@@ -16,6 +16,7 @@ export type selectionType = {
 }
 
 export type tallasType = {
+    _id: string,
     name: string,
     count: number
 }

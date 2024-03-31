@@ -99,7 +99,6 @@ const AgregarProductos = () => {
             anime: values.anime,
             img: values.img,
             price: values.price,
-            stock: true,
             tallas: values.tallas,
             tipo: values.tipo.name
         }).then(res => {
@@ -216,7 +215,7 @@ const AgregarProductos = () => {
                                     <ErrorMesage errors={errors} touched={touched} name='tallas' />
 
 
-                                    <Button type='submit' label="Agregar Producto" className="w-full p-3 text-xl mt-3" onClick={handleSubmit}></Button>
+                                    <Button type='submit' label="Agregar Producto" className="w-full p-3 text-xl mt-3" onClick={() => handleSubmit()}></Button>
                                 </Form>
                             )
                         }
