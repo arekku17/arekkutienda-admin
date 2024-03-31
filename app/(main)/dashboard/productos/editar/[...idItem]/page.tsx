@@ -107,7 +107,6 @@ const EditarProducto = ({ params }: { params: { idItem: string } }) => {
             anime: values.anime,
             img: values.img,
             price: values.price,
-            stock: true,
             tallas: values.tallas,
             tipo: values.tipo.name
         }, product.idItem).then(res => {
