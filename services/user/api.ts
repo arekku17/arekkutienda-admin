@@ -6,6 +6,7 @@ export type ReqPostProducto = {
     anime: string,
     img: string,
     price: number,
+    stock: boolean,
     tallas: Array<tallasType>,
     tipo: string,
 }

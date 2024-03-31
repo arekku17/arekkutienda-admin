@@ -5,7 +5,7 @@ import { Button } from 'primereact/button';
 import { FileUpload } from 'primereact/fileupload';
 import { InputText } from 'primereact/inputtext'
 import React, { useEffect, useRef, useState } from 'react'
-import { Formik, Form, Field } from 'formik';
+import { Formik, Form, Field, FieldArray } from 'formik';
 import * as Yup from "yup";
 import { ProductSchemaType, ProductType } from '@/types/response';
 import ErrorMesage from '@/components/ErrorMesage';
@@ -34,12 +34,15 @@ const ProductoSchema = Yup.object().shape({
         .typeError("Debe ser un número"),
     stock: Yup.boolean()
         .required('Campo Requerido'),
-    tallaChica: Yup.number()
-        .required('Campo Requerido'),
-    tallaMediana: Yup.number()
-        .required('Campo Requerido'),
-    tallaGrande: Yup.number()
-        .required('Campo Requerido'),
+    tallas: Yup.array()
+        .of(
+            Yup.object().shape({
+                name: Yup.string(),
+                mount: Yup.number(),
+            })
+        )
+        .required()
+        .min(1),
     tipo: Yup.object()
         .required('Campo Requerido')
 
@@ -48,7 +51,7 @@ const ProductoSchema = Yup.object().shape({
 const EditarProducto = ({ params }: { params: { idItem: string } }) => {
 
 
-    const { data: product, error, isLoading } = useSWR(`producto/${params.idItem}`, fetcher)
+    const { data: product, error, isLoading } = useSWR(`productos/producto/${params.idItem}`, fetcher)
 
     console.log(product)
 
@@ -56,7 +59,7 @@ const EditarProducto = ({ params }: { params: { idItem: string } }) => {
     const [loadingUpload, setLoadingUpload] = useState(false);
     const [url, setUrl] = useState("");
     const { data: session, status } = useSession();
-    const toast = useRef(null);
+    const toast = useRef<Toast>(null);
     const router = useRouter();
 
     const tiposProductos = [
@@ -68,7 +71,7 @@ const EditarProducto = ({ params }: { params: { idItem: string } }) => {
     ]
 
     const showSuccess = () => {
-        toast.current?.show({ severity: 'success', summary: 'Agregado exitoso', detail: 'Se editó exitosamente el producto', life: 3000 });
+        toast?.current?.show({ severity: 'success', summary: 'Agregado exitoso', detail: 'Se editó exitosamente el producto', life: 3000 });
     }
 
     const showError = () => {
@@ -104,8 +107,7 @@ const EditarProducto = ({ params }: { params: { idItem: string } }) => {
             anime: values.anime,
             img: values.img,
             price: values.price,
-            stock: true,
-            tallas: [values.tallaChica, values.tallaMediana, values.tallaGrande],
+            tallas: values.tallas,
             tipo: values.tipo.name
         }, product.idItem).then(res => {
             showSuccess()
@@ -117,11 +119,11 @@ const EditarProducto = ({ params }: { params: { idItem: string } }) => {
     }
 
     useEffect(() => {
-      if(product){
-        setImageUploaded(product.img)
-      }
+        if (product) {
+            setImageUploaded(product.img)
+        }
     }, [product])
-    
+
 
     if (isLoading) {
         return (
@@ -136,23 +138,21 @@ const EditarProducto = ({ params }: { params: { idItem: string } }) => {
 
     }
 
-    if(product){
+    if (product) {
         return (
             <div className="grid">
                 <div className="col-12">
                     <div className="card p-fluid">
                         <h5>Editar Producto #{product.idItem}</h5>
-    
+
                         <Formik
                             initialValues={{
                                 anime: product.anime,
                                 img: product.img,
                                 price: product.price,
                                 stock: product.stock,
-                                tallaChica: product.tallas[0],
-                                tallaMediana: product.tallas[1],
-                                tallaGrande: product.tallas[2],
-                                tipo: {name: product.tipo, code: product.tipo},
+                                tallas: product.tallas,
+                                tipo: { name: product.tipo, code: product.tipo },
                                 title: product.title
                             }}
                             validationSchema={ProductoSchema}
@@ -201,42 +201,65 @@ const EditarProducto = ({ params }: { params: { idItem: string } }) => {
                                             }
                                             <ErrorMesage errors={errors} touched={touched} name='img' />
                                         </div>
-                                        <div className='grid'>
-                                            <div className="field col-12 md:col-4">
-                                                <label htmlFor="age1">Stock en Chica</label>
-                                                <InputText id="tallaChica" type="number" value={"" + values.tallaChica} onChange={handleChange} />
-                                                <ErrorMesage errors={errors} touched={touched} name='tallaChica' />
-                                            </div>
-                                            <div className="field col-12 md:col-4">
-                                                <label htmlFor="age1">Stock en Mediana</label>
-                                                <InputText id="tallaMediana" type="number" value={"" + values.tallaMediana} onChange={handleChange} />
-                                                <ErrorMesage errors={errors} touched={touched} name='tallaMediana' />
-                                            </div>
-                                            <div className="field col-12 md:col-4">
-                                                <label htmlFor="age1">Stock en Grande</label>
-                                                <InputText id="tallaGrande" type="number" value={"" + values.tallaGrande} onChange={handleChange} />
-                                                <ErrorMesage errors={errors} touched={touched} name='tallaGrande' />
-                                            </div>
+                                        <div className='field'>
+                                            <label htmlFor="tallas">Tallas</label>
+                                            <FieldArray
+                                                name="tallas"
+                                                render={arrayHelpers => (
+                                                    <div className='w-full'>
+                                                        {values.tallas.map((talla, index) => (
+                                                            <div key={index} className='grid w-full'>
+                                                                {/** both these conventions do the same */}
+                                                                <div className='flex flex-column gap-2 col-5'>
+                                                                    <label htmlFor="tallas">Nombre</label>
+                                                                    <Field name={`tallas[${index}].name`} type="text"
+                                                                        className="p-2"
+
+                                                                    />
+                                                                </div>
+                                                                <div className='flex flex-column gap-2 col-5'>
+                                                                    <label htmlFor="tallas">Cantidad</label>
+                                                                    <Field name={`tallas[${index}].count`} type="number"
+                                                                        className="p-2"
+                                                                        default="0"
+                                                                    />
+                                                                </div>
+                                                                <div className='col-2 flex align-items-end justify-content-end'>
+                                                                    <Button type='button' icon="pi pi-minus" className="w-3rem h-3rem"
+                                                                        onClick={() => arrayHelpers.remove(index)}
+                                                                        severity="danger"
+                                                                    />
+                                                                </div>
+
+                                                            </div>
+                                                        ))}
+                                                        <Button type='button' icon="pi pi-plus" label='AGREGAR TALLA' className="w-full"
+                                                            onClick={() => arrayHelpers.push({ name: '', count: '' })}
+                                                            severity="success" />
+                                                    </div>
+                                                )}
+                                            />
                                         </div>
-    
-    
+                                        <ErrorMesage errors={errors} touched={touched} name='tallas' />
+
+
                                         <Button type='submit' label="Editar Producto" className="w-full p-3 text-xl mt-3" ></Button>
                                     </Form>
                                 )
                             }
                         </Formik>
-    
-    
+
+
                     </div>
-    
-    
+
+
                 </div>
-    
+
                 <Toast ref={toast} />
             </div>
         )
     }
-    else{
+    else {
         return (
             <div className="grid">
                 <div className="col-12">
@@ -248,7 +271,7 @@ const EditarProducto = ({ params }: { params: { idItem: string } }) => {
         )
     }
 
-    
+
 }
 
 export default EditarProducto

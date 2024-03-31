@@ -6,7 +6,7 @@ import {
   useMountEffect,
   useUnmountEffect,
 } from "primereact/hooks";
-import React, { useContext, useEffect, useRef } from "react";
+import React, { Suspense, useContext, useEffect, useRef } from "react";
 import { classNames } from "primereact/utils";
 import AppFooter from "./AppFooter";
 import AppSidebar from "./AppSidebar";
@@ -144,18 +144,20 @@ const Layout = ({ children }: ChildContainerProps) => {
 
   return (
     <React.Fragment>
-      <div className={containerClass}>
-        <AppTopbar ref={topbarRef} />
-        <div ref={sidebarRef} className="layout-sidebar">
-          <AppSidebar />
-        </div>
-        <div className="layout-main-container">
-          <div className="layout-main">{children}</div>
-          <AppFooter />
-        </div>
+      <Suspense fallback={<div>Loading...</div>}>
+        <div className={containerClass}>
+          <AppTopbar ref={topbarRef} />
+          <div ref={sidebarRef} className="layout-sidebar">
+            <AppSidebar />
+          </div>
+          <div className="layout-main-container">
+            <div className="layout-main">{children}</div>
+            <AppFooter />
+          </div>
 
-        <div className="layout-mask"></div>
-      </div>
+          <div className="layout-mask"></div>
+        </div>
+      </Suspense>
     </React.Fragment>
   );
 };

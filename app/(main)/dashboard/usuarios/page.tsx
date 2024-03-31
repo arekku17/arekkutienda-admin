@@ -17,14 +17,15 @@ import { deleteProductos } from '@/services/producto/api';
 import { useSession } from 'next-auth/react';
 import { ConfirmDialog } from 'primereact/confirmdialog'; // For <ConfirmDialog /> component
 import { confirmDialog } from 'primereact/confirmdialog'; // For confirmDialog method
+import axios from 'axios';
 
-const fetcher = (url: string) => fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/${url}`).then(res => res.json())
+const fetcher = (url: string, token: string) =>
+    axios
+        .get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/${url}`, { headers: { "x-access-token": token } })
+        .then((res) => res.data);
 
 /* @todo Used 'as any' for types here. Will fix in next version due to onSelectionChange event type issue. */
 const Crud = () => {
-    const { data: products, error, isLoading } = useSWR("productos/producto", fetcher)
-
-
     const [product, setProduct] = useState<ProductType | undefined>(undefined);
     const [selectedProducts, setSelectedProducts] = useState(null);
     const [submitted, setSubmitted] = useState(false);
@@ -33,6 +34,8 @@ const Crud = () => {
     const dt = useRef<DataTable<any>>(null);
     const router = useRouter();
     const { data: session, status } = useSession();
+
+    const { data: users, error, isLoading } = useSWR(["user", session?.user.token], ([url, token]) => fetcher(url, (token ? token : "")))
 
     const formatCurrency = (value: number) => {
         return value.toLocaleString('en-US', {
@@ -56,11 +59,9 @@ const Crud = () => {
         return (
             <React.Fragment>
                 <div className="my-2">
-                    <Link href="/dashboard/productos/agregar">
+                    <Link href="/dashboard/usuarios/agregar">
                         <Button label="Nuevo" icon="pi pi-plus" severity="success" className=" mr-2" />
-
                     </Link>
-                    <Button label="Eliminar" icon="pi pi-trash" severity="danger" onClick={confirm1} disabled={!selectedProducts || !(selectedProducts as any).length} />
                 </div>
             </React.Fragment>
         );
@@ -77,7 +78,7 @@ const Crud = () => {
     const codeBodyTemplate = (rowData: Demo.Product) => {
         return (
             <>
-                #{rowData.idItem}
+                #{rowData._id}
             </>
         );
     };
@@ -100,13 +101,6 @@ const Crud = () => {
         );
     };
 
-    const actionBodyTemplate = (rowData: ProductType) => {
-        return (
-            <>
-                <Button icon="pi pi-pencil" rounded severity="success" className="mr-2" onClick={() => router.push(`/dashboard/productos/editar/${rowData.idItem}`)} />
-            </>
-        );
-    };
 
     const stockBodyTemplate = (rowData: ProductType) => {
         return (
@@ -146,13 +140,16 @@ const Crud = () => {
 
                     {
                         isLoading ?
-                            <p>Cargando productos...</p>
+                            <p>Cargando usuarios...</p>
                             :
                             <DataTable
                                 ref={dt}
-                                value={products}
+                                value={users}
                                 selection={selectedProducts}
-                                onSelectionChange={(e) => setSelectedProducts(e.value as any)}
+                                onSelectionChange={(e) => 
+                                    router.push(`/dashboard/usuario/${e.value.username}`)
+                                }
+                                selectionMode="single"
                                 dataKey="_id"
                                 paginator
                                 rows={10}
@@ -165,15 +162,9 @@ const Crud = () => {
                                 header={header}
                                 responsiveLayout="scroll"
                             >
-                                <Column selectionMode="multiple" headerStyle={{ width: '4rem' }}></Column>
-                                <Column field="idItem" header="Codigo" sortable body={codeBodyTemplate} headerStyle={{ minWidth: '4rem' }}></Column>
-                                <Column field="title" header="Nombre" sortable headerStyle={{ minWidth: '12rem' }}></Column>
-                                <Column field="anime" header="Anime" sortable headerStyle={{ minWidth: '12rem' }}></Column>
-                                <Column header="img" body={imageBodyTemplate}></Column>
-                                <Column field="price" header="Precio" body={priceBodyTemplate} sortable></Column>
-                                <Column field="tipo" header="Categoria" sortable headerStyle={{ minWidth: '10rem' }}></Column>
-                                <Column header="Stock" sortable body={stockBodyTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
-                                <Column body={actionBodyTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
+                                <Column field="id" header="Codigo" sortable body={codeBodyTemplate} headerStyle={{ minWidth: '4rem' }}></Column>
+                                <Column field="username" header="Nombre de usuario" sortable headerStyle={{ minWidth: '4rem' }}></Column>
+                                <Column field="email" header="Correo" sortable headerStyle={{ minWidth: '4rem' }}></Column>
                             </DataTable>
                     }
 

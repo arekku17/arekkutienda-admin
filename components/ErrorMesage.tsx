@@ -13,7 +13,7 @@ const ErrorMesage = ({ errors, touched, name }: Props) => {
         <>
             {
                 errors[name] && touched[name] ? (
-                    <div className='text-red-300 mt-2'>{errors[name]}</div>
+                    <div className='text-red-300 mt-2'>{errors[name]?.toString()}</div>
                 ) : null
             }
         </>

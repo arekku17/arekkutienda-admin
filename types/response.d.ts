@@ -6,9 +6,20 @@ export type ProductType = {
     price: number,
     stock: boolean,
     idItem: string,
-    tallas: Array,
+    tallas: Array<tallasType>,
     tipo: string,
 };
+
+export type selectionType = {
+    name: string,
+    code: string
+}
+
+export type tallasType = {
+    _id: string,
+    name: string,
+    count: number
+}
 
 /* Context Types */
 export type ProductSchemaType = {
@@ -17,8 +28,6 @@ export type ProductSchemaType = {
     img: string,
     price: number,
     stock: boolean,
-    tallaChica: number,
-    tallaMediana: number,
-    tallaGrande: number,
-    tipo: string,
+    tallas: Array<tallasType>,
+    tipo: selectionType
 };
