@@ -34,5 +34,13 @@ export const deleteProductos = async (token: string, productos: any) => {
     })
 }
 
+export const descargarEtiquetas = async (token: string, productos: any) => {
+    return await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/productos/etiquetas`, productos, {
+        headers: {
+            "x-access-token": token
+        }
+    })
+}
+
 
 

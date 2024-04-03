@@ -13,7 +13,7 @@ import Link from 'next/link';
 import { ProductType } from '@/types/response';
 import useSWR from "swr"
 import { useRouter } from 'next/navigation'
-import { deleteProductos } from '@/services/producto/api';
+import { deleteProductos, descargarEtiquetas } from '@/services/producto/api';
 import { useSession } from 'next-auth/react';
 import { ConfirmDialog } from 'primereact/confirmdialog'; // For <ConfirmDialog /> component
 import { confirmDialog } from 'primereact/confirmdialog'; // For confirmDialog method
@@ -52,6 +52,10 @@ const Crud = () => {
         });
     };
 
+    const downloadTags = () => {
+        descargarEtiquetas("" + session?.user.token, { productos: selectedProducts });
+    }
+
     const leftToolbarTemplate = () => {
         return (
             <React.Fragment>
@@ -60,7 +64,8 @@ const Crud = () => {
                         <Button label="Nuevo" icon="pi pi-plus" severity="success" className=" mr-2" />
 
                     </Link>
-                    <Button label="Eliminar" icon="pi pi-trash" severity="danger" onClick={confirm1} disabled={!selectedProducts || !(selectedProducts as any).length} />
+                    <Button label="Eliminar" icon="pi pi-trash" severity="danger" className=" mr-2" onClick={confirm1} disabled={!selectedProducts || !(selectedProducts as any).length} />
+                    <Button label="Descargar etiquetas" icon="pi pi-tag" severity="info" onClick={downloadTags} disabled={!selectedProducts || !(selectedProducts as any).length} />
                 </div>
             </React.Fragment>
         );

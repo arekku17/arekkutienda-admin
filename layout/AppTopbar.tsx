@@ -40,8 +40,11 @@ const AppTopbar = forwardRef<AppTopbarRef>((props, ref) => {
                 <i className="pi pi-ellipsis-v" />
             </button>
 
-            <div ref={topbarmenuRef} className={classNames('layout-topbar-menu flex justify-content-center align-items-center', { 'layout-topbar-menu-mobile-active': layoutState.profileSidebarVisible })}>
-                <p className='text-gray-200 justify-content-center align-items-center m-0'>{session?.user.user.username}</p>
+            <div ref={topbarmenuRef} className={classNames('layout-topbar-menu', { 'layout-topbar-menu-mobile-active': layoutState.profileSidebarVisible })}>
+                <button type="button" className="p-link layout-topbar-button">
+                    <i className="pi pi-user"></i>
+                    <span>{session?.user.user.username}</span>
+                </button>
                 <button type="button" className="p-link layout-topbar-button" onClick={cerrarSesion}>
                     <i className="pi pi-sign-out"></i>
                     <span>Cerrar Sesión</span>
