@@ -219,7 +219,7 @@ const AgregarProductos = () => {
                                     <ErrorMesage errors={errors} touched={touched} name='tallas' />
 
 
-                                    <Button type='submit' label="Agregar Producto" className="w-full p-3 text-xl mt-3" onClick={() => handleSubmit()}></Button>
+                                    <Button type='submit' label="Agregar Producto" className="w-full p-3 text-xl mt-3"></Button>
                                 </Form>
                             )
                         }
