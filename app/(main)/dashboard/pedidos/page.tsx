@@ -13,25 +13,22 @@ import Link from 'next/link';
 import { ProductType } from '@/types/response';
 import useSWR from "swr"
 import { useRouter } from 'next/navigation'
-import { deleteProductos, descargarEtiquetas } from '@/services/producto/api';
+import { deleteProductos } from '@/services/producto/api';
 import { useSession } from 'next-auth/react';
 import { ConfirmDialog } from 'primereact/confirmdialog'; // For <ConfirmDialog /> component
 import { confirmDialog } from 'primereact/confirmdialog'; // For confirmDialog method
-import { Dropdown } from 'primereact/dropdown';
-import { tiposProductos } from '@/utils/tiposProductos';
-import { FilterMatchMode, FilterOperator } from 'primereact/api';
+import axios from 'axios';
+import moment from 'moment';
+import { Tag } from 'primereact/tag';
+import { getSeverity } from '@/utils/getSeverity';
 
-const fetcher = (url: string) => fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/${url}`).then(res => res.json())
+const fetcher = (url: string, token: string) =>
+    axios
+        .get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/${url}`, { headers: { "x-access-token": token } })
+        .then((res) => res.data);
 
 /* @todo Used 'as any' for types here. Will fix in next version due to onSelectionChange event type issue. */
 const Crud = () => {
-    const { data: products, error, isLoading } = useSWR("productos/producto", fetcher)
-
-    const [filters1, setFilters1] = useState({
-        'global': { value: null, matchMode: FilterMatchMode.CONTAINS },
-        'anime': { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.CONTAINS }] },
-        'tipo': { operator: FilterOperator.OR, constraints: [{ value: null, matchMode: FilterMatchMode.EQUALS }] },
-    });
     const [product, setProduct] = useState<ProductType | undefined>(undefined);
     const [selectedProducts, setSelectedProducts] = useState(null);
     const [submitted, setSubmitted] = useState(false);
@@ -40,6 +37,8 @@ const Crud = () => {
     const dt = useRef<DataTable<any>>(null);
     const router = useRouter();
     const { data: session, status } = useSession();
+
+    const { data: users, error, isLoading } = useSWR(["pedido", session?.user.token], ([url, token]) => fetcher(url, (token ? token : "")))
 
     const formatCurrency = (value: number) => {
         return value.toLocaleString('en-US', {
@@ -59,20 +58,13 @@ const Crud = () => {
         });
     };
 
-    const downloadTags = () => {
-        descargarEtiquetas("" + session?.user.token, { productos: selectedProducts });
-    }
-
     const leftToolbarTemplate = () => {
         return (
             <React.Fragment>
                 <div className="my-2">
-                    <Link href="/dashboard/productos/agregar">
+                    <Link href="/dashboard/pedidos/agregar">
                         <Button label="Nuevo" icon="pi pi-plus" severity="success" className=" mr-2" />
-
                     </Link>
-                    <Button label="Eliminar" icon="pi pi-trash" severity="danger" className=" mr-2" onClick={confirm1} disabled={!selectedProducts || !(selectedProducts as any).length} />
-                    <Button label="Descargar etiquetas" icon="pi pi-tag" severity="info" onClick={downloadTags} disabled={!selectedProducts || !(selectedProducts as any).length} />
                 </div>
             </React.Fragment>
         );
@@ -89,53 +81,42 @@ const Crud = () => {
     const codeBodyTemplate = (rowData: Demo.Product) => {
         return (
             <>
-                #{rowData.idItem}
+                #{rowData._id}
             </>
         );
     };
 
 
-    const imageBodyTemplate = (rowData: Demo.Product) => {
-        return (
-            <>
-                <img src={`${rowData.img}`} alt={"" + rowData.img} className="shadow-2" width="100" />
-            </>
-        );
-    };
-
-    const priceBodyTemplate = (rowData: Demo.Product) => {
+    const priceBodyTemplate = (rowData: any) => {
         return (
             <>
                 <span className="p-column-title">Price</span>
-                {formatCurrency(rowData.price as number)}
+                {formatCurrency(rowData.costoTotal as number)}
             </>
         );
     };
 
-    const actionBodyTemplate = (rowData: ProductType) => {
+    const generadoBodyTemplate = (rowData: any) => {
+        return moment(new Date(rowData.createdAt)).format("DD/MM/YYYY hh:mm a");
+    };
+
+    const cantidadBodyTemplate = (rowData: any) => {
+
+        const cantidadTotal = rowData.productos.reduce((a: number,b: any) => {
+            return a + b.cantidad
+        }, 0)
+
         return (
             <>
-                <Button icon="pi pi-pencil" rounded severity="success" className="mr-2" onClick={() => router.push(`/dashboard/productos/editar/${rowData.idItem}`)} />
+                {cantidadTotal}
             </>
         );
     };
 
-    const stockBodyTemplate = (rowData: ProductType) => {
-        return (
-            <>
-                {
-                    rowData.tallas.map(talla => (
-                        <p key={talla._id}>{talla.name}: {talla.count}</p>
-                    ))
-                }
-
-            </>
-        );
-    };
 
     const header = (
         <div className="flex flex-column md:flex-row md:justify-content-between md:align-items-center">
-            <h5 className="m-0">Administrar Productos</h5>
+            <h5 className="m-0">Administrar Pedidos</h5>
             <span className="block mt-2 md:mt-0 p-input-icon-left">
                 <i className="pi pi-search" />
                 <InputText type="search" onInput={(e) => setGlobalFilter(e.currentTarget.value)} placeholder="Buscar..." />
@@ -148,17 +129,10 @@ const Crud = () => {
         deleteProductos("" + session?.user.token, { productos: selectedProducts })
     }
 
-    const categoriaFilterTemplate = (options: any) => {
-        return <Dropdown
-            value={options.value}
-            options={tiposProductos.map(producto => producto.code)}
-            onChange={(e) => {
-                console.log(options)
-                options.filterCallback(e.value, options.index)
-            }}
-            placeholder="Categoria" className="p-column-filter"
-            showClear />;
-    };
+    const statusBodyTemplate = (rowData: any) => {
+        return <Tag value={rowData.estado} severity={getSeverity(rowData.estado)}></Tag>;
+      };
+    
 
     return (
         <div className="grid crud-demo">
@@ -170,13 +144,16 @@ const Crud = () => {
 
                     {
                         isLoading ?
-                            <p>Cargando productos...</p>
+                            <p>Cargando pedidos...</p>
                             :
                             <DataTable
                                 ref={dt}
-                                value={products}
+                                value={users}
                                 selection={selectedProducts}
-                                onSelectionChange={(e) => setSelectedProducts(e.value as any)}
+                                onSelectionChange={(e) => 
+                                    router.push(`/dashboard/pedido/${e.value._id}`)
+                                }
+                                selectionMode="single"
                                 dataKey="_id"
                                 paginator
                                 rows={10}
@@ -188,17 +165,13 @@ const Crud = () => {
                                 emptyMessage="No productos encontrados"
                                 header={header}
                                 responsiveLayout="scroll"
-                                filters={filters1}
                             >
-                                <Column selectionMode="multiple" headerStyle={{ width: '4rem' }}></Column>
-                                <Column field="idItem" header="Codigo" body={codeBodyTemplate} filter headerStyle={{ minWidth: '4rem' }}></Column>
-                                <Column field="title" header="Nombre" sortable headerStyle={{ minWidth: '12rem' }}></Column>
-                                <Column field="anime" header="Anime" filter headerStyle={{ minWidth: '12rem' }}></Column>
-                                <Column header="img" body={imageBodyTemplate}></Column>
-                                <Column field="price" header="Precio" body={priceBodyTemplate} sortable></Column>
-                                <Column field="tipo" header="Categoria" filter filterElement={categoriaFilterTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
-                                <Column header="Stock" sortable body={stockBodyTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
-                                <Column body={actionBodyTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
+                                <Column field="id" header="Codigo" sortable body={codeBodyTemplate} headerStyle={{ minWidth: '4rem' }}></Column>
+                                <Column field="usuario.username" header="Usuario" sortable headerStyle={{ minWidth: '4rem' }}></Column>
+                                <Column field="productos" header="cantidad" body={cantidadBodyTemplate} sortable headerStyle={{ minWidth: '4rem' }}></Column>
+                                <Column field="createdAt" header="fechaCompra" body={generadoBodyTemplate} sortable headerStyle={{ minWidth: '4rem' }}></Column>
+                                <Column field="costoTotal" header="Monto total" body={priceBodyTemplate} sortable headerStyle={{ minWidth: '4rem' }}></Column>
+                                <Column field="estado" header="Estado" body={statusBodyTemplate} sortable headerStyle={{ minWidth: '4rem' }}></Column>
                             </DataTable>
                     }
 

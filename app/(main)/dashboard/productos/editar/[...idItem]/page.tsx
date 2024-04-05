@@ -17,6 +17,7 @@ import { Toast } from 'primereact/toast';
 import useSWR from 'swr';
 
 import { useRouter } from 'next/navigation'
+import { tiposProductos } from '@/utils/tiposProductos';
 
 const fetcher = (url: string) => fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/${url}`).then(res => res.json())
 
@@ -61,14 +62,6 @@ const EditarProducto = ({ params }: { params: { idItem: string } }) => {
     const { data: session, status } = useSession();
     const toast = useRef<Toast>(null);
     const router = useRouter();
-
-    const tiposProductos = [
-        { name: "playera", code: "playera" },
-        { name: "llavero", code: "llavero" },
-        { name: "sudadera", code: "sudadera" },
-        { name: "poster", code: "poster" },
-        { name: "boton", code: "boton" }
-    ]
 
     const showSuccess = () => {
         toast?.current?.show({ severity: 'success', summary: 'Agregado exitoso', detail: 'Se editó exitosamente el producto', life: 3000 });

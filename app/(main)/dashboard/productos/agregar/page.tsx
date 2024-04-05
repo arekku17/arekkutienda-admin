@@ -14,6 +14,7 @@ import { postProductos } from '@/services/producto/api';
 
 import { Toast } from 'primereact/toast';
 import { useRouter } from 'next/navigation'
+import { tiposProductos } from '@/utils/tiposProductos';
 
 
 
@@ -52,19 +53,6 @@ const AgregarProductos = () => {
     const { data: session, status } = useSession();
     const toast = useRef<Toast>(null);
     const router = useRouter();
-
-
-    const tiposProductos = [
-        { name: "playera", code: "playera" },
-        { name: "llavero", code: "llavero" },
-        { name: "sudadera", code: "sudadera" },
-        { name: "poster", code: "poster" },
-        { name: "pin", code: "pin" },
-        { name: "peluche", code: "peluche" },
-        { name: "figura", code: "figura" },
-        { name: "variado", code: "variado" }
-
-    ]
 
     const showSuccess = () => {
         toast.current?.show({ severity: 'success', summary: 'Agregado exitoso', detail: 'Se agregó exitosamente el producto', life: 3000 });
