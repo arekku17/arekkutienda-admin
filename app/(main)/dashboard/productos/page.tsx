@@ -10,7 +10,7 @@ import { Toolbar } from 'primereact/toolbar';
 import React, { useEffect, useRef, useState } from 'react';
 import { Demo } from '../../../../types/types';
 import Link from 'next/link';
-import { ProductType } from '@/types/response';
+import { ProductType, tallasType } from '@/types/response';
 import useSWR from "swr"
 import { useRouter } from 'next/navigation'
 import { deleteProductos, descargarEtiquetas } from '@/services/producto/api';
@@ -163,6 +163,33 @@ const Crud = () => {
     return (
         <div className="grid crud-demo">
             <ConfirmDialog />
+            <div className="col-12">
+                <div className="card">
+                    <h2>Productos</h2>
+                    {
+                        isLoading ?
+                            <p>Cargando datos...</p>
+                            :
+                            <>
+                                <div className='flex gap-5 align-items-center'>
+                                    <p className='flex align-items-center gap-2 p-0 m-0'> <i className="pi pi-list text-gray-500"></i> {products.reduce((a: number, b: ProductType) => {
+                                        const totalTallas = b.tallas.reduce((acc: number, talla: tallasType) => {
+                                            return acc + talla.count
+                                        }, 0)
+                                        return a + totalTallas;
+                                    }, 0)} productos disponibles</p>
+
+                                    <p className='flex align-items-center gap-2 p-0 m-0'><i className="pi pi-money-bill text-gray-500"></i> ${products.reduce((a: number, b: ProductType) => {
+                                        const totalTallas = b.tallas.reduce((acc: number, talla: tallasType) => {
+                                            return acc + talla.count
+                                        }, 0)
+                                        return a + (totalTallas * b.price);
+                                    }, 0).toLocaleString('en')} en almacen</p>
+                                </div>
+                            </>
+                    }
+                </div>
+            </div>
             <div className="col-12">
                 <div className="card">
                     <Toast ref={toast} />
